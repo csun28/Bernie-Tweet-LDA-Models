@@ -6,6 +6,7 @@ library(stringr)
 library(textmineR)
 library(stopwords)
 library(data.table)
+library(LDAvis)
 
 
 #twitter API
