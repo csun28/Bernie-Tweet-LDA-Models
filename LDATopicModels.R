@@ -183,7 +183,7 @@ LexicalDiversityChart2 = ggplot(Bernie_Visual2, aes(y=topic, x=created_at.x)) +
                          labs(x="Time of Tweet", y="Topic") +
                          scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
 LexicalDiversityChart2
-ggsave(filename = "LDATimeSeriesChart2.png", plot = last_plot(), width = 9, height = 3, units = "in")
+ggsave(filename = "LDATimeSeriesChart(30Topic).png", plot = last_plot(), width = 9, height = 3, units = "in")
  
  
 #source code to create visual of latent Dirichlet allocation models
