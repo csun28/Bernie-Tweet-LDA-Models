@@ -1,23 +1,26 @@
-#load libraries
+#load required packages
 library(rtweet) 
 library(tidytext) 
 library(tidyverse) 
 library(stringr)
+library(tm)
 library(textmineR)
 library(stopwords)
 library(data.table)
 library(LDAvis)
-
+library(servr)
 
 #twitter API
-twitter_token <- create_token(app = "nameofapp", 
-                              consumer_key = "lalalalalalasomestuffs", 
-                              consumer_secret = "morerandomstuffsthatsreallyreallylong",
-                              access_token = "blahblahblahblahblahblahblahderp",
-                              access_secret = "lalalalalalafinalrandomstuffs")
+twitter_token <- create_token(app = "AUserName",
+                              consumer_key = "blahblahblahblah",
+                              consumer_secret = "whydidthiscodetakesolongtowriteblahblahblah",
+                              access_token = "blahblahblahblahblahrandomuniquekeycrap",
+                              access_secret = "somemorerandomcrapblahblahblahblah")
 
 #get Bernie Sander's tweets from approximately the past year
 Bernie <- get_timeline("@BernieSanders", max_id="1297680876525035520", n=10000)
+fwrite(Bernie, file = "BernieRawData.csv")
+
 
 #copy Bernie dataset (don't have to retrive from Twitter every time code is runned in same R Session) and select relevant columns
 Bernie_Copy <- Bernie[!duplicated(Bernie$created_at),] %>% select(created_at, text, hashtags, urls_expanded_url)
@@ -44,6 +47,12 @@ stopwords <- c("human", 'country', 'us', 'america', 'americans', 'american', 'un
                'people', 'together', 'dont', 'now', 'must', 'like', 'lets', 'just', 'life', 'need', 'hshire', 'going', 'tonight', 'day', 'pm', 
                'government', 'federal', 'ready', 'change', 'today', 'days', 'one', 'et', 'based', 'find', 'get', '1', '4', 'week',  'save', 
                'thank', 'bernie', 'sanders', 'bernie_sanders', 'join', 'time', 'youre', 'democracy', 'continue', 'real', 'means', 'care')
+
+
+#create corpus 
+corpus <- as.data.frame(Bernie_Copy$text)
+corpus <- Corpus(VectorSource(corpus$`Bernie_Copy$text`))
+corpus <- corpus %>% tm_map(removeWords, c(stopwords, stopwords("en")))
 
 
 #create document term matrix
@@ -78,8 +87,8 @@ LDA_Evaluation <- data.frame(k = sapply(lda_model_list, function(x) nrow(x$phi))
                              k = sapply(lda_model_list, function(x) (x$k)), 
                              stringsAsFactors = FALSE) %>% arrange(desc(coherence)) 
 
-#run latent Dirichlet allocation model with k=12, alpha=2, and beta=0.5 (optimal parameters that also give reasonably graphable number of topic)
-set.seed(55322)
+#run latent Dirichlet allocation model with k=12, alpha=0.1, and beta=0.05 (optimal parameters that also give reasonably graphable number of topic)
+set.seed(5421)
 LDAFit <- FitLdaModel(dtm = dtm, k = 11, iterations = 1000, burnin = 900, alpha = 0.1, beta =0.05, optimize_alpha = TRUE, calc_likelihood = TRUE, 
                       calc_coherence = TRUE, calc_r2 = TRUE) 
 LDAFitSummary <- data.frame(topic = rownames(LDAFit$phi), 
@@ -100,17 +109,16 @@ row.names(LDAAssignments) <- NULL
 #merge fitted data frame with tweets from original data 
 BernieLDAAssignments <- Bernie_Copy %>% select(created_at, text) %>% merge(LDAAssignments, by=0) 
 BernieLDAAssignments <- BernieLDAAssignments %>% select(-c(Row.names, created_at.y)) %>% arrange(created_at.x)
-
+write.csv(BernieLDAAssignments2, file = "BernieLDAAssignments(11Topics).csv")
 
 #manually rename some of the latent Dirichlet allocation's topic labels for clarity
-Bernie_Visual <- BernieLDAAssignments %>% rename(class_divison = working_class) %>% rename(green_new_deal = new_deal) %>%
-                 rename(civil_rights_justice = white_house) %>% rename(covid_19_unemployment = covid_19) %>%
-                 rename(dem_debate_biden = dem_debate)
+Bernie_Visual <- BernieLDAAssignments %>% rename(political_revolution = fight_justice) %>% rename(green_new_deal = new_deal) %>%
+                 rename(dem_defeat_trump = dem_debate) %>% rename(covid_19_unemployment = covid_19)
 #maniplate data for visulization
-Bernie_Visual <- Bernie_Visual %>% gather(topic, ldaprobability, covid_19_unemployment:dem_debate_biden) %>%
+Bernie_Visual <- Bernie_Visual %>% gather(topic, ldaprobability, dem_defeat_trump:covid_19_unemployment) %>%
                  group_by(created_at.x) %>% arrange(desc(ldaprobability), .by_group = TRUE)
-Bernie_Visual_a <- Bernie_Visual %>% slice(1) %>% filter(ldaprobability>0.1)
-Bernie_Visual_b <- Bernie_Visual %>% filter(ldaprobability>0.25)
+Bernie_Visual_a <- Bernie_Visual %>% slice(1) %>% filter(ldaprobability>0.15)
+Bernie_Visual_b <- Bernie_Visual %>% filter(ldaprobability>0.3)
 Bernie_Visual <- full_join(Bernie_Visual_a, Bernie_Visual_b, by = "created_at.x") %>%  mutate("topic" = coalesce(topic.x, topic.y)) %>%
   mutate("ldaprobability" = coalesce(ldaprobability.x, ldaprobability.y)) %>%
   select(-topic.x, -topic.y, -ldaprobability.x, -ldaprobability.y, -text.y)
@@ -123,11 +131,11 @@ LexicalDiversityChart = ggplot(Bernie_Visual, aes(y=topic, x=created_at.x)) +
                           scale_color_manual(values = c("#CC3333", "#FF6633", "#FF9900", "99CC00", "#006633", "#006666",
                                                         "#0033CC", "#660099", "#CC0066", "#990066", "#993333")) +
                           theme(legend.position = "none") +
-                          ggtitle("Frequency of Bernie Sander's Tweets on Different Topics") +
+                          ggtitle("Frequency of Bernie Sander's Tweets on Different Topics (Chart 2)") +
                           labs(x="Time of Tweet", y="Topic") +
                           scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
 LexicalDiversityChart  
-ggsave(filename = "LDATimeSeriesChart1.png", plot = last_plot(), width = 9, height = 3, units = "in")
+ggsave(filename = "LDATimeSeriesChart(11Topic).png", plot = last_plot(), width = 9, height = 3, units = "in")
 
 #increase topic groups (k) of latent Dirichlet allocation model for better fit
 set.seed(55322)
@@ -148,12 +156,12 @@ row.names(LDAAssignments2) <- NULL
 
 BernieLDAAssignments2 <- Bernie_Copy %>% select(created_at, text) %>% merge(LDAAssignments2, by=0) 
 BernieLDAAssignments2 <- BernieLDAAssignments2 %>% select(-c(Row.names,created_at.y, starts_with("t_"))) %>% arrange(created_at.x)
-write.csv(BernieLDAAssignments2, file = "BernieLDAAssignments2.csv")
+write.csv(BernieLDAAssignments2, file = "BernieLDAAssignments(30Topics).csv")
 
 #select topics that were politically impactful during past year for more interesting visualization 
-Bernie_Visual2 <- BernieLDAAssignments2 %>% select(dem_debate, unemployment_benefits, postal_service, civil_rights, criminal_justice, super_tuesday,
-                                                   covid_19, health_insurance, new_deal, corporate_greed, created_at.x)
-Bernie_Visual2 <- Bernie_Visual2 %>% gather(topic, ldaprobability, dem_debate:corporate_greed) %>%
+Bernie_Visual2 <- BernieLDAAssignments2 %>% select(dem_debate, unemployment_benefits, postal_service, criminal_justice, super_tuesday, civil_rights,
+                                                   covid_19, new_deal, corporate_greed, health_insurance, created_at.x)
+Bernie_Visual2 <- Bernie_Visual2 %>% gather(topic, ldaprobability, dem_debate:health_insurance) %>%
   group_by(created_at.x) %>% arrange(desc(ldaprobability), .by_group = TRUE)
 Bernie_Visual_2a <- Bernie_Visual2 %>% slice(1) %>% filter(ldaprobability>0.8)
 Bernie_Visual_2b <- Bernie_Visual2 %>% filter(ldaprobability>0.2)
@@ -168,23 +176,17 @@ LexicalDiversityChart2 = ggplot(Bernie_Visual2, aes(y=topic, x=created_at.x)) +
   geom_point(aes(color=topic), size=1.5) +
   scale_color_manual(values = c("#FF6633", "#FF9900", "99CC00", "#006633", "#006666", "#3300FF", "#CC0066", "#990066", "#993333", "red")) +
   theme(legend.position = "none") +
-  ggtitle("Frequency of Bernie Sander's Tweets on Different Topics") +
+  ggtitle("Frequency of Bernie Sander's Tweets on Different Topics (Chart 2)") +
   labs(x="Time of Tweet", y="Topic") +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
 LexicalDiversityChart2
 ggsave(filename = "LDATimeSeriesChart2.png", plot = last_plot(), width = 9, height = 3, units = "in")
 
 
-#function to convert latent Dirichlet allocation model to visual using LDAvis package
-model2LDAvis <- function(model){
-    ldavis <- LDAvis::createJSON(
-      phi = model$phi, 
-      theta = model$theta,
-      vocab = colnames(model$phi),
-      doc.length = slam::row_sums(model$data, na.rm = TRUE),
-      term.frequency = slam::col_sums(model$data, na.rm = TRUE))
-  return(ldavis)
-}
-#open visual in viewer or local browser 
-serVis(model2LDAvis(LDAFit))
-serVis(model2LDAvis(LDAFit2))
+#source code to create visual of latent Dirichlet allocation models
+source("LDAVisual.R")
+#open visual of latent Dirichlet allocation models in viewer or local browser 
+serVis(topicmodels_json_ldavis(LDAFit, corpus, dtm), out.dir = 'Bernie LDA 11 Topics', open.browser = TRUE)
+serVis(topicmodels_json_ldavis(LDAFit2, corpus, dtm), out.dir = 'Bernie LDA 30 Topics', open.browser = TRUE)
+
+
