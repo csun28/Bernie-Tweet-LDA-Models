@@ -186,7 +186,7 @@ ggsave(filename = "LDATimeSeriesChart2.png", plot = last_plot(), width = 9, heig
 #source code to create visual of latent Dirichlet allocation models
 source("LDAVisual.R")
 #open visual of latent Dirichlet allocation models in viewer or local browser 
-serVis(topicmodels_json_ldavis(LDAFit, corpus, dtm), out.dir = 'Bernie LDA 11 Topics', open.browser = TRUE)
-serVis(topicmodels_json_ldavis(LDAFit2, corpus, dtm), out.dir = 'Bernie LDA 30 Topics', open.browser = TRUE)
+serVis(topicmodels_json_ldavis(LDAFit, corpus, dtm), out.dir = 'Bernie LDA Viewer 11 Topics', open.browser = TRUE)
+serVis(topicmodels_json_ldavis(LDAFit2, corpus, dtm), out.dir = 'Bernie LDA Viewer 30 Topics', open.browser = TRUE)
 
 
