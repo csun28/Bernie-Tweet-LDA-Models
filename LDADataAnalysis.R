@@ -62,13 +62,10 @@ stopwords <- c("human", 'country', 'us', 'america', 'americans', 'american', 'un
                'thank', 'bernie', 'sanders', 'bernie_sanders', 'join', 'time', 'youre', 'democracy', 'continue', 'real', 'means', 'care')
 
 #create corpus 
-text <- as.data.frame(Bernie_Copy$text)
 corpus <- Corpus(VectorSource(text$`Bernie_Copy$text`), readerControl=list(language="en")) 
 corpus <- tm_map(corpus, removeWords, c(stopwords, stopwords("en"))) 
 #create wordcloud of commonly used words in corpus
-WordCloud <- wordcloud(corpus, max.words=100, random.order=FALSE, rot.per=0.5, colors=c("#6666FF", "#333399", "#000066"), scale=c(3.5,0.25))
-WordCloud
-ggsave(filename = "TweetsWordCloud.png", plot = last_plot(), width = 4.5, height = 4.5, units = "in")
+wordcloud(corpus, max.words=100, random.order=FALSE, rot.per=0.5, colors=c("#6666FF", "#333399", "#000066"), scale=c(3.5,0.25))
 
 
 #create document term matrix
