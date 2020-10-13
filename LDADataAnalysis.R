@@ -50,7 +50,7 @@ TimeTweets <- ggplot(Bernie_Copy, aes(date(created_at))) +
   labs(x="Time of Tweet", y="Number of Tweets") +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") 
 TimeTweets
-ggsave(filename = "DailyTweetCount.png", plot = last_plot(), width = 9, height = 3, units = "in")
+ggsave(filename = "DailyTweetCounts.png", plot = last_plot(), width = 9, height = 3, units = "in")
 
 #count words in all tweets and identify most commonly used words 
 Bernie_Word_Count <- data_frame(text = Bernie_Copy$text) %>% unnest_tokens(word, text) %>% anti_join(stop_words) %>% count(word, sort = TRUE)
@@ -68,7 +68,7 @@ corpus <- tm_map(corpus, removeWords, c(stopwords, stopwords("en")))
 #create wordcloud of commonly used words in corpus
 WordCloud <- wordcloud(corpus, max.words=100, random.order=FALSE, rot.per=0.5, colors=c("#6666FF", "#333399", "#000066"), scale=c(3.5,0.25))
 WordCloud
-ggsave(filename = "TweetsWordcloud.png", plot = last_plot(), width = 4.5, height = 4.5, units = "in")
+ggsave(filename = "TweetsWordCloud.png", plot = last_plot(), width = 4.5, height = 4.5, units = "in")
 
 
 #create document term matrix
@@ -128,7 +128,7 @@ row.names(LDAAssignments) <- NULL
 #merge fitted data frame with tweets from original data 
 BernieLDAAssignments <- Bernie_Copy %>% select(created_at, text) %>% merge(LDAAssignments, by=0) 
 BernieLDAAssignments <- BernieLDAAssignments %>% select(-c(Row.names, created_at.y)) %>% arrange(created_at.x)
-write.csv(BernieLDAAssignments, file = "BernieLDAAssignments(11Topics).csv")
+write.csv(BernieLDAAssignments, file = "BernieLDAAssignment(11Topics).csv")
 
 #maniplate data for visulization
 Bernie_Visual <- BernieLDAAssignments %>% gather(topic, ldaprobability, covid_19:dem_debate) %>%
@@ -149,7 +149,7 @@ LexicalDiversityChart = ggplot(Bernie_Visual, aes(y=topic, x=created_at.x)) +
   labs(x="Time of Tweet", y="Topic") +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
 LexicalDiversityChart
-ggsave(filename = "LDATimeSeriesChart(11Topic).png", plot = last_plot(), width = 9, height = 3, units = "in")
+ggsave(filename = "LDATimeSeriesChart(11Topics).png", plot = last_plot(), width = 9, height = 3, units = "in")
 
 
 #increase topic groups (k) of Latent Dirichlet Allocation model for better fit
@@ -171,7 +171,7 @@ row.names(LDAAssignments2) <- NULL
 
 BernieLDAAssignments2 <- Bernie_Copy %>% select(created_at, text) %>% merge(LDAAssignments2, by=0) 
 BernieLDAAssignments2 <- BernieLDAAssignments2 %>% select(-c(Row.names,created_at.y, starts_with("t_"))) %>% arrange(created_at.x)
-write.csv(BernieLDAAssignments2, file = "BernieLDAAssignments(30Topics).csv")
+write.csv(BernieLDAAssignments2, file = "BernieLDAAssignment(30Topics).csv")
 
 #select topics that were politically impactful during past year for more interesting visualization 
 Bernie_Visual2 <- BernieLDAAssignments2 %>% select(dem_debate, unemployment_benefits, postal_service, criminal_justice, super_tuesday,
@@ -194,7 +194,7 @@ LexicalDiversityChart2 = ggplot(Bernie_Visual2, aes(y=topic, x=created_at.x)) +
   labs(x="Time of Tweet", y="Topic") +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
 LexicalDiversityChart2
-ggsave(filename = "LDATimeSeriesChart(30Topic).png", plot = last_plot(), width = 9, height = 3, units = "in")
+ggsave(filename = "LDATimeSeriesChart(30Topics).png", plot = last_plot(), width = 9, height = 3, units = "in")
 
 
 #source code to create visual of Latent Dirichlet Allocation models
