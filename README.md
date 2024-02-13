@@ -7,7 +7,7 @@ This project uses R to analyze the tweets that Bernie Sanders publised from Nove
 ### Data Source and Preprocessing 
 Data was taken off of Bernie Sanders official Twitter account (@BernieSanders). A Twitter API along with the `rtweet` package was used to pull the tweets directly from Twitter, and I was limited to pulling 3150 tweets total. This amounted to tweets for approximatly the past 10 month, with a significantly larger quantity of his tweets happening before he dropped out of the 2020 Democratic Pimary race in April 2020. 
 
-Standard natural language preprocessing was applied to strip the data of punctuation and stopwords. In addition to the standard stopwords, words such as "government", "american", "united states", "nation", and "people" were striped because they reprosent common retoric used by politicians and don't communicate significant meaning. 
+Standard natural language preprocessing was applied to strip the data of punctuation and stopwords. In addition to the standard stopwords, words such as "government", "american", "united states", "nation", and "people" were striped because they represent common retoric used by politicians and don't communicate significant meaning. 
 
 
 ### Analysis and Results
